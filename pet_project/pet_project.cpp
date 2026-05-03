@@ -2,15 +2,21 @@
 //
 
 #include <iostream>
+#include <vector>
+#include <functional>
+using namespace std;
+template<typename F>
 class Task_Manager {
 public:
     Task_Manager() {
 
     }
+    void add_work(functional<F> a) {
 
+    }
 
 private:
-
+    vector<functional<F>> task_stack;
 };
 int main()
 {
