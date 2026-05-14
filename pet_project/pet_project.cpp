@@ -8,7 +8,10 @@
 #include <tuple>
 #include <future>
 #include <utility>
+#include <mutex>
+#include <map>
 #include <typeinfo>
+#include <string.h>
 using namespace std;
 void print(int a) {
     cout << a;
@@ -20,20 +23,36 @@ public:
     }
 
     template< typename T, class ...F>
-    void add_work(T(*func)(F...),F ... arg) {
+    void add_work(T(*func)(F...),F ... arg,future<T>&a) {
+        {
 
-        task_stack.push_back([=]() {
-            func(arg...);
-            });
+            lock_guard l(m);
+            task_stack.push_back([=]() {
+                promise<T> p;
+                a = p.get_future();
+                p.set_value(func(arg...));});
+        }
+
+        }
+
+    template< typename T, class ...F>
+    void add_work(T(*func)(F...), F ... arg) {
+        {
+
+            lock_guard l(m);
+            task_stack.push_back( [=]() {func(arg...); });
+        }
+
     }
     void run() {
-        for (auto x:task_stack) {
+        for (auto &x:task_stack) {
+            lock_guard l(m);
             x();
            }
        
     }
 private: 
-    
+    mutex m;
     vector<function<void()>> task_stack;
 
 };
